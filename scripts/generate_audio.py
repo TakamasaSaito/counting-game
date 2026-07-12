@@ -41,30 +41,26 @@ HOSTS = (
 )
 OUT_DIR = 'audio'
 
-# filename (without .wav) → text to synthesize
-PHRASE_FILES = {  # type: Dict[str, str]
-    'count_1':  'いち',
-    'count_2':  'に',
-    'count_3':  'さん',
-    'count_4':  'し',
-    'count_5':  'ご',
-    'count_6':  'ろく',
-    'count_7':  'しち',
-    'count_8':  'はち',
-    'count_9':  'きゅう',
-    'count_10': 'じゅう',
-    'question': 'いくつ あるかな',
-    'praise_1': 'できたね！',
-    'praise_2': 'すごい！',
-    'praise_3': 'やったね！',
-    'hint':     'もういちど かぞえてみよう',
-    'clear':    'ぜんぶ できたね！',
+# filename (without .wav) → (text, speedScale, pitchScale, intonationScale)
+# 数え上げは短くテンポよく(speed高め)、それ以外は標準
+PHRASE_FILES = {  # type: Dict[str, tuple]
+    'count_1':  ('いち',                   1.15, 0.05, 1.2),
+    'count_2':  ('に',                     1.15, 0.05, 1.2),
+    'count_3':  ('さん',                   1.15, 0.05, 1.2),
+    'count_4':  ('し',                     1.15, 0.05, 1.2),
+    'count_5':  ('ご',                     1.15, 0.05, 1.2),
+    'count_6':  ('ろく',                   1.15, 0.05, 1.2),
+    'count_7':  ('しち',                   1.15, 0.05, 1.2),
+    'count_8':  ('はち',                   1.15, 0.05, 1.2),
+    'count_9':  ('きゅう',                 1.15, 0.05, 1.2),
+    'count_10': ('じゅう',                 1.15, 0.05, 1.2),
+    'question': ('ぜんぶで いくつかな',     1.05, 0.04, 1.2),
+    'praise_1': ('できたね',               1.05, 0.04, 1.2),
+    'praise_2': ('すごい',                 1.05, 0.04, 1.2),
+    'praise_3': ('やったね',               1.05, 0.04, 1.2),
+    'hint':     ('もういちど かぞえてみよう', 1.05, 0.04, 1.2),
+    'clear':    ('ぜんぶ できたね',         1.05, 0.04, 1.2),
 }
-
-# Prosody tweaks
-SPEED = 1.05
-PITCH = 0.04
-INTON = 1.2
 
 
 # --- VOICEVOX API helpers ---------------------------------------------
@@ -98,7 +94,7 @@ def find_speaker_id(base):
     raise RuntimeError('「ずんだもん」が見つかりません。VOICEVOXのバージョンを確認してください。')
 
 
-def synthesize(base, text, speaker_id, out_path):
+def synthesize(base, text, speaker_id, out_path, speed=1.05, pitch=0.04, inton=1.2):
     qs = urllib.parse.urlencode({'text': text, 'speaker': speaker_id})
     req = urllib.request.Request(
         f'{base}/audio_query?{qs}',
@@ -109,9 +105,9 @@ def synthesize(base, text, speaker_id, out_path):
     with urllib.request.urlopen(req, timeout=30) as r:
         query = json.loads(r.read())
 
-    query['speedScale']       = SPEED
-    query['pitchScale']       = PITCH
-    query['intonationScale']  = INTON
+    query['speedScale']       = speed
+    query['pitchScale']       = pitch
+    query['intonationScale']  = inton
     query['prePhonemeLength'] = 0.3   # 頭切れ対策
 
     for ap in query['accent_phrases']:
@@ -154,11 +150,11 @@ def main() -> None:
 
     errors = []  # type: List[str]
     total = len(PHRASE_FILES)
-    for i, (name, text) in enumerate(PHRASE_FILES.items(), 1):
+    for i, (name, (text, speed, pitch, inton)) in enumerate(PHRASE_FILES.items(), 1):
         out = os.path.join(OUT_DIR, f'{name}.wav')
         print(f'[{i:2d}/{total}] {name}.wav  "{text}"', end=' ', flush=True)
         try:
-            synthesize(base, text, speaker_id, out)
+            synthesize(base, text, speaker_id, out, speed, pitch, inton)
             print('OK')
         except Exception as e:
             print(f'FAILED: {e}')

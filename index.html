@@ -682,7 +682,7 @@ body {
 <div id="screen-game" class="screen">
   <button class="home-btn" id="btn-home-game" aria-label="ホームにもどる">🏠</button>
   <div class="question-header">
-    <span class="question-text">いくつ あるかな？</span>
+    <span class="question-text">ぜんぶで いくつかな？</span>
     <button class="speak-btn" id="btn-speak" aria-label="もういちどよむ">🔊</button>
     <span class="character-game" id="char-game" aria-hidden="true">🦊</span>
   </div>
@@ -1163,7 +1163,7 @@ const UI = (() => {
       renderEmojiField(n, emoji);
     });
 
-    Speech.speak('いくつ あるかな', 'question.wav');
+    Speech.speak('ぜんぶで いくつかな', 'question.wav');
   }
 
   function emojiSize(n) {
@@ -1409,7 +1409,7 @@ const UI = (() => {
 
     document.getElementById('btn-speak').addEventListener('click', () => {
       AudioEngine.playClick();
-      Speech.speak('いくつ あるかな', 'question.wav');
+      Speech.speak('ぜんぶで いくつかな', 'question.wav');
     });
 
     document.getElementById('btn-next').addEventListener('click', () => {
