@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="ひらがな">
+<meta name="apple-mobile-web-app-title" content="いくつあるかな">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-512.png">
-<title>ひらがなたからさがし</title>
+<title>いくつあるかな</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -149,7 +149,7 @@ body {
   stroke: var(--accent);
   stroke-width: 3.5;
   stroke-linecap: round;
-  stroke-dasharray: 169.6;   /* 2π × 27 */
+  stroke-dasharray: 169.6;
   stroke-dashoffset: 169.6;
   transition: none;
 }
@@ -178,99 +178,28 @@ body {
 }
 .home-btn:active { background: rgba(255,255,255,0.35); transform: scale(0.9); }
 
-/* ===== COURSE SELECT ===== */
-#screen-level { gap: 2vmin; overflow: hidden; }
-
-.screen-title {
-  font-size: clamp(22px, 6vmin, 42px);
-  font-weight: 900;
-  color: var(--white);
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  flex-shrink: 0;
-}
-
-.level-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(6px, 1.5vmin, 10px);
-  width: min(400px, 90vw);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  max-height: 62vh;
-  padding: 4px 2px 8px;
-}
-
-.level-card {
-  touch-action: manipulation;
-  border-radius: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.15em;
-  font-weight: 900;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: transform 0.1s;
-  -webkit-tap-highlight-color: transparent;
-  padding: clamp(8px, 2vmin, 14px) 0.4em;
-  min-height: clamp(72px, 14vmin, 88px);
-}
-.level-card:active:not(.locked) { transform: scale(0.95); }
-.level-card.unlocked { background: var(--white); color: var(--text-dark); }
-.level-card.locked {
-  background: rgba(255,255,255,0.18);
-  color: rgba(255,255,255,0.45);
-  cursor: default;
-}
-
-.level-card .level-num { font-size: clamp(22px, 6vmin, 36px); line-height: 1; }
-.level-card .level-label { font-size: clamp(13px, 3vmin, 18px); }
-.level-card .course-chars {
-  font-size: clamp(9px, 2vmin, 12px);
-  opacity: 0.6;
-  letter-spacing: 0.05em;
-}
-.level-card .lock-icon { font-size: clamp(22px, 6vmin, 36px); }
-
 /* ===== GAME SCREEN ===== */
 #screen-game {
   justify-content: space-between;
   padding-top: max(12px, env(safe-area-inset-top));
   padding-bottom: max(12px, env(safe-area-inset-bottom));
-  gap: 2vmin;
+  gap: 1.5vmin;
 }
 
-.question-area {
+.question-header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 1vmin;
+  justify-content: center;
+  gap: 2vmin;
   width: 100%;
+  flex-shrink: 0;
 }
 
-.question-label {
-  color: rgba(255,255,255,0.8);
-  font-size: clamp(14px, 3.5vmin, 22px);
-  font-weight: 700;
-}
-
-.question-row {
-  display: flex;
-  align-items: center;
-  gap: 2vmin;
-}
-
-.question-char {
-  font-size: clamp(48px, 14vmin, 96px);
+.question-text {
+  font-size: clamp(18px, 5vmin, 32px);
   font-weight: 900;
   color: var(--white);
-  text-shadow: 0 4px 16px rgba(0,0,0,0.3);
-  background: rgba(255,255,255,0.15);
-  border-radius: 16px;
-  padding: 0.1em 0.3em;
-  line-height: 1;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 
 .speak-btn {
@@ -303,41 +232,93 @@ body {
   100% { transform: translateY(0) scale(1); }
 }
 
-/* ===== TILE GRID ===== */
-.tile-grid {
-  display: grid;
-  gap: clamp(8px, 2.5vmin, 16px);
+/* ===== EMOJI FIELD ===== */
+.emoji-field {
+  position: relative;
   width: 100%;
-  max-width: min(480px, 92vw);
+  max-width: min(520px, 96vw);
   flex: 1;
-  align-content: center;
+  min-height: 0;
 }
 
-.tile {
+.emoji-item {
   touch-action: manipulation;
-  aspect-ratio: 1;
-  border-radius: clamp(12px, 3vmin, 20px);
+  position: absolute;
+  width: 88px;
+  height: 88px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(28px, 9vmin, 68px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform: translate(-50%, -50%);
+  border: none;
+  background: none;
+  border-radius: 50%;
+  transition: opacity 0.25s;
+}
+.emoji-item.tapped {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.emoji-item.bounce { animation: emoji-bounce 0.4s ease-out; }
+@keyframes emoji-bounce {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  30%  { transform: translate(-50%, calc(-50% - 18px)) scale(1.3); }
+  65%  { transform: translate(-50%, calc(-50% + 5px)) scale(0.93); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+.count-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 22px;
+  height: 22px;
+  background: var(--accent);
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* ===== ANSWER BUTTONS ===== */
+.answer-row {
+  display: flex;
+  gap: clamp(8px, 2.5vmin, 20px);
+  width: 100%;
+  max-width: min(480px, 92vw);
+  flex-shrink: 0;
+}
+
+.answer-btn {
+  touch-action: manipulation;
+  flex: 1;
+  min-height: 88px;
+  border-radius: 20px;
+  font-size: clamp(30px, 10vmin, 64px);
   font-weight: 900;
   color: var(--text-dark);
   background: var(--white);
   border: 4px solid transparent;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1);
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: transform 0.1s;
   -webkit-tap-highlight-color: transparent;
-  position: relative;
-  overflow: hidden;
-  min-height: 88px;
-  min-width: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.tile:active { transform: scale(0.92); }
-.tile.disabled { pointer-events: none; }
+.answer-btn:active { transform: scale(0.92); }
+.answer-btn.disabled { pointer-events: none; }
 
-.tile.correct {
+.answer-btn.correct {
   animation: bounce 0.5s ease-out;
   background: #FECA57;
   border-color: #f39c12;
@@ -350,7 +331,7 @@ body {
   100% { transform: scale(1); }
 }
 
-.tile.wrong { animation: shake 0.4s ease-out; }
+.answer-btn.wrong { animation: shake 0.4s ease-out; }
 @keyframes shake {
   0% { transform: translateX(0); }
   20% { transform: translateX(-8px); }
@@ -360,7 +341,7 @@ body {
   100% { transform: translateX(0); }
 }
 
-.tile.hint-pulse {
+.answer-btn.hint-pulse {
   animation: pulse-hint 1.5s ease-in-out infinite;
   border-color: #FECA57;
 }
@@ -377,6 +358,7 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   padding: 0.5em;
+  flex-shrink: 0;
 }
 
 .progress-label {
@@ -489,16 +471,19 @@ body {
 .modal-box {
   background: var(--white);
   border-radius: 24px;
-  padding: 2em;
-  width: min(320px, 88vw);
+  padding: 1.5em;
+  width: min(340px, 92vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   display: flex;
   flex-direction: column;
-  gap: 1.2em;
+  gap: 1em;
   align-items: center;
 }
 
 .modal-title {
-  font-size: clamp(18px, 5vmin, 26px);
+  font-size: clamp(16px, 4.5vmin, 22px);
   font-weight: 900;
   color: var(--text-dark);
 }
@@ -569,6 +554,61 @@ body {
   line-height: 1.4;
 }
 
+/* ===== PARENT STATS ===== */
+.parent-stats-area {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: clamp(13px, 3vmin, 15px);
+  color: var(--text-dark);
+  padding: 0.2em 0.4em;
+  border-bottom: 1px solid #f0f0f0;
+}
+.stat-row strong { font-weight: 900; }
+
+.num-stats-label {
+  font-size: clamp(12px, 2.8vmin, 14px);
+  font-weight: 700;
+  color: #636e72;
+  align-self: flex-start;
+  margin-top: 0.3em;
+}
+
+.number-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 5px;
+  width: 100%;
+}
+
+.num-stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 5px 2px 4px;
+  gap: 1px;
+}
+.num-label {
+  font-size: clamp(16px, 4vmin, 20px);
+  font-weight: 900;
+  color: var(--text-dark);
+  line-height: 1;
+}
+.num-pct {
+  font-size: clamp(9px, 2.2vmin, 11px);
+  color: #636e72;
+  line-height: 1;
+}
+
 /* ===== SPLASH SCREEN ===== */
 #screen-splash { gap: 5vmin; cursor: pointer; }
 .splash-fox {
@@ -577,7 +617,7 @@ body {
   animation: splash-bounce 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 .splash-title {
-  font-size: clamp(32px, 10vmin, 72px);
+  font-size: clamp(28px, 9vmin, 64px);
   font-weight: 900;
   color: var(--white);
   text-shadow: 0 4px 16px rgba(0,0,0,0.3);
@@ -598,21 +638,22 @@ body {
 
 /* reduced motion */
 @media (prefers-reduced-motion: reduce) {
-  .character-idle, .character-game.jump, .tile.correct,
-  .tile.wrong, .tile.hint-pulse, .clear-title, .clear-character,
-  .star-burst, .confetti-piece, .splash-fox, .splash-title,
+  .character-idle, .character-game.jump, .answer-btn.correct,
+  .answer-btn.wrong, .answer-btn.hint-pulse, .clear-title, .clear-character,
+  .star-burst, .confetti-piece, .splash-fox, .splash-title, .emoji-item.bounce,
   .gear-ring-fill {
     animation: none !important;
     transition: none !important;
   }
 }
 
-/* landscape adjustments */
+/* landscape adjustments (small phones) */
 @media (orientation: landscape) and (max-height: 500px) {
-  #screen-game { flex-direction: row; flex-wrap: wrap; padding: 8px 16px; }
-  .question-area { width: 35%; flex-direction: column; justify-content: center; }
-  .tile-grid { flex: 1; max-width: 55vw; }
-  .progress-area { width: 100%; }
+  #screen-game { flex-direction: row; flex-wrap: wrap; padding: 6px 12px; gap: 6px; }
+  .question-header { width: 28%; flex-direction: column; justify-content: center; min-height: 0; }
+  .emoji-field { flex: 1; }
+  .answer-row { width: 100%; }
+  .progress-area { width: 100%; padding: 0.2em; }
 }
 </style>
 </head>
@@ -621,16 +662,15 @@ body {
 <!-- SPLASH SCREEN -->
 <div id="screen-splash" class="screen active">
   <span class="splash-fox" aria-hidden="true">🦊</span>
-  <div class="splash-title">ひらがな<br>たからさがし</div>
+  <div class="splash-title">いくつ<br>あるかな</div>
 </div>
 
 <!-- START SCREEN -->
 <div id="screen-start" class="screen">
   <span class="character-idle" id="char-start" aria-hidden="true">🦊</span>
-  <div class="app-title">ひらがな<br>たからさがし</div>
-  <div class="app-subtitle">もじをさがしてみよう！</div>
+  <div class="app-title">いくつ<br>あるかな</div>
+  <div class="app-subtitle">かずをかぞえてみよう！</div>
   <button class="btn-primary" id="btn-start" aria-label="はじめる">はじめる</button>
-  <button class="btn-secondary" id="btn-level-select" style="margin-top:0.5em">もじをえらぶ</button>
   <button class="gear-btn" id="btn-gear" aria-label="せってい">⚙
     <svg class="gear-ring" viewBox="0 0 54 54" aria-hidden="true">
       <circle class="gear-ring-fill" cx="27" cy="27" r="27"/>
@@ -638,26 +678,16 @@ body {
   </button>
 </div>
 
-<!-- COURSE SELECT SCREEN -->
-<div id="screen-level" class="screen">
-  <button class="home-btn" id="btn-home-level" aria-label="ホームにもどる">🏠</button>
-  <div class="screen-title">こうすをえらぼう</div>
-  <div class="level-grid" id="level-grid"></div>
-  <button class="btn-secondary" id="btn-back-start">もどる</button>
-</div>
-
 <!-- GAME SCREEN -->
 <div id="screen-game" class="screen">
   <button class="home-btn" id="btn-home-game" aria-label="ホームにもどる">🏠</button>
-  <div class="question-area">
-    <div class="question-label">これをさがそう！</div>
-    <div class="question-row">
-      <div class="question-char" id="question-char">あ</div>
-      <button class="speak-btn" id="btn-speak" aria-label="もういちどよむ">🔊</button>
-      <span class="character-game" id="char-game" aria-hidden="true">🦊</span>
-    </div>
+  <div class="question-header">
+    <span class="question-text">いくつ あるかな？</span>
+    <button class="speak-btn" id="btn-speak" aria-label="もういちどよむ">🔊</button>
+    <span class="character-game" id="char-game" aria-hidden="true">🦊</span>
   </div>
-  <div class="tile-grid" id="tile-grid"></div>
+  <div class="emoji-field" id="emoji-field"></div>
+  <div class="answer-row" id="answer-row"></div>
   <div class="progress-area">
     <span class="progress-label" id="progress-label">1 / 10</span>
     <div class="progress-dots" id="progress-dots"></div>
@@ -666,11 +696,11 @@ body {
 
 <!-- CLEAR SCREEN -->
 <div id="screen-clear" class="screen">
-  <div class="clear-title" id="clear-title">すごい！</div>
+  <div class="clear-title">すごい！</div>
   <div class="clear-character" aria-hidden="true">🦊✨</div>
   <div class="clear-subtitle" id="clear-subtitle">10もん ぜんぶ できたね！</div>
   <div class="clear-buttons">
-    <button class="btn-primary" id="btn-next" style="width:100%">つぎへ →</button>
+    <button class="btn-primary" id="btn-next" style="width:100%">もういちど</button>
     <button class="btn-secondary" id="btn-quit" style="width:100%">おわる</button>
   </div>
   <div class="confetti-container" id="confetti-container"></div>
@@ -680,12 +710,13 @@ body {
 <div class="modal-overlay" id="modal-parent">
   <div class="modal-box">
     <div class="modal-title">⚙ せってい（おとなむけ）</div>
+    <div class="parent-stats-area" id="parent-stats"></div>
     <div class="volume-toggle">
       <span>おと</span>
       <button class="toggle-switch on" id="toggle-volume" aria-label="音量切り替え"></button>
       <span id="volume-label">オン</span>
     </div>
-    <button class="btn-modal danger" id="btn-reset-confirm">しんちょくをリセット</button>
+    <button class="btn-modal danger" id="btn-reset-confirm" style="width:100%">しんちょくをリセット</button>
     <button class="btn-modal cancel" id="btn-parent-close" style="width:100%">とじる</button>
     <div class="modal-credit">音声: VOICEVOX / ずんだもん（あまあま）<br>© SSS合同会社</div>
   </div>
@@ -707,74 +738,18 @@ body {
 'use strict';
 
 // ===== CONSTANTS =====
-const ALL_CHARS = [
-  'あ','い','う','え','お',
-  'か','き','く','け','こ',
-  'さ','し','す','せ','そ',
-  'た','ち','つ','て','と',
-  'な','に','ぬ','ね','の',
-  'は','ひ','ふ','へ','ほ',
-  'ま','み','む','め','も',
-  'や','ゆ','よ',
-  'ら','り','る','れ','ろ',
-  'わ','を','ん',
-];
-
-// Index 0 is mix mode (all chars); indices 1-10 are the 10 kana rows
-const COURSES = [
-  { name: 'ぜんぶミックス', emoji: '🎲', chars: ALL_CHARS },
-  { name: 'あ行', emoji: '🌸', chars: ['あ','い','う','え','お'] },
-  { name: 'か行', emoji: '⭐', chars: ['か','き','く','け','こ'] },
-  { name: 'さ行', emoji: '🌈', chars: ['さ','し','す','せ','そ'] },
-  { name: 'た行', emoji: '🎵', chars: ['た','ち','つ','て','と'] },
-  { name: 'な行', emoji: '🌙', chars: ['な','に','ぬ','ね','の'] },
-  { name: 'は行', emoji: '🌺', chars: ['は','ひ','ふ','へ','ほ'] },
-  { name: 'ま行', emoji: '🍀', chars: ['ま','み','む','め','も'] },
-  { name: 'や行', emoji: '⛄', chars: ['や','ゆ','よ'] },
-  { name: 'ら行', emoji: '🎪', chars: ['ら','り','る','れ','ろ'] },
-  { name: 'わ行', emoji: '🎯', chars: ['わ','を','ん'] },
-];
-
-// Pairs/groups that must not appear together when tileCount ≤ 6
-const SIMILAR_GROUPS = [
-  ['あ','お'],
-  ['ぬ','め'],
-  ['わ','ね','れ'],
-  ['る','ろ'],
-  ['さ','ち'],
-  ['き','さ'],
-  ['は','ほ'],
-  ['し','つ'],
-  ['そ','ろ'],
-];
-
+const EMOJI_POOLS = {
+  fruits:   ['🍎','🍌','🍓','🍊','🍇','🍑','🍰','🍩'],
+  animals:  ['🐶','🐱','🐰','🐼','🐸','🐥','🐟','🦋'],
+  vehicles: ['🚗','🚌','🚒','🚑','🚀','⛵','🚲','🚁'],
+};
+const EMOJI_CATEGORIES = Object.keys(EMOJI_POOLS);
+const COUNT_WORDS = ['いち','に','さん','し','ご','ろく','しち','はち','きゅう','じゅう'];
 const QUESTIONS_PER_SET = 10;
 const HINT_THRESHOLD = 3;
 const NEXT_DELAY = 2000;
-const STORAGE_KEY = 'hiragana-hunt-v1';
-
-const TILE_BORDER_COLORS = ['#FF6B6B','#FF9F43','#FECA57','#48DBFB','#FF9FF3','#54A0FF','#5F27CD','#00D2D3','#1DD1A1','#C56BFF','#FF9F43','#FF6B6B'];
-
-function getTileConfig(questionIndex) {
-  if (questionIndex < 3) return { count: 4, cols: 2 };
-  if (questionIndex < 6) return { count: 6, cols: 3 };
-  if (questionIndex < 9) return { count: 9, cols: 3 };
-  return { count: 12, cols: 4 };
-}
-
-// Hiragana → WAV filename stem (used by AudioPlayer)
-const CHAR_FILE = {
-  'あ':'a',  'い':'i',  'う':'u',  'え':'e',  'お':'o',
-  'か':'ka', 'き':'ki', 'く':'ku', 'け':'ke', 'こ':'ko',
-  'さ':'sa', 'し':'si', 'す':'su', 'せ':'se', 'そ':'so',
-  'た':'ta', 'ち':'ti', 'つ':'tu', 'て':'te', 'と':'to',
-  'な':'na', 'に':'ni', 'ぬ':'nu', 'ね':'ne', 'の':'no',
-  'は':'ha', 'ひ':'hi', 'ふ':'fu', 'へ':'he', 'ほ':'ho',
-  'ま':'ma', 'み':'mi', 'む':'mu', 'め':'me', 'も':'mo',
-  'や':'ya', 'ゆ':'yu', 'よ':'yo',
-  'ら':'ra', 'り':'ri', 'る':'ru', 'れ':'re', 'ろ':'ro',
-  'わ':'wa', 'を':'wo', 'ん':'n',
-};
+const STORAGE_KEY = 'counting-game-v1';
+const ANSWER_COLORS = ['#FF6B6B','#48DBFB','#1DD1A1'];
 
 // ===== AUDIO ENGINE =====
 const AudioEngine = (() => {
@@ -854,66 +829,78 @@ const AudioEngine = (() => {
     playTone(880, 'sine', now, 0.06, 0.2);
   }
 
-  return { resume, setEnabled, isEnabled, playCorrect, playWrong, playClear, playClick };
+  function playPop() {
+    const c = getCtx();
+    if (!c || !enabled) return;
+    const now = c.currentTime;
+    playTone(900, 'sine', now, 0.07, 0.15);
+  }
+
+  return { resume, setEnabled, isEnabled, playCorrect, playWrong, playClear, playClick, playPop };
 })();
 
 // ===== AUDIO PLAYER (VOICEVOX file-based) =====
 const AudioPlayer = (() => {
   const SILENT = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAAAAAA==';
-  // filename → HTMLAudioElement (populated by preload())
   const pool = new Map();
-
-  // Files to preload: all 46 question WAVs + 4 effect WAVs
-  function _allFiles() {
-    const files = Object.values(CHAR_FILE).map(r => `q_${r}.wav`);
-    files.push('ok.wav', 'clear.wav', 'retry.wav', 'cheer.wav');
-    return files;
-  }
+  const countPool = new Map(); // dedicated channel for count_N.wav
 
   function preload() {
-    _allFiles().forEach(file => {
+    const voiceFiles = ['question.wav','praise_1.wav','praise_2.wav','praise_3.wav','hint.wav','clear.wav'];
+    voiceFiles.forEach(file => {
       if (pool.has(file)) return;
       const a = new Audio();
       a.preload = 'auto';
       a.src = `audio/${file}`;
       pool.set(file, a);
     });
+    for (let i = 1; i <= 10; i++) {
+      if (countPool.has(i)) continue;
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = `audio/count_${i}.wav`;
+      countPool.set(i, a);
+    }
   }
 
   function unlock() {
-    // iOS unlock: play silent audio in user gesture
     const u = new Audio(SILENT);
     u.play().catch(() => {});
-    // Trigger load on preloaded elements (helps iOS start buffering)
     pool.forEach(a => { if (a.readyState === 0) a.load(); });
+    countPool.forEach(a => { if (a.readyState === 0) a.load(); });
   }
 
-  // Try to play audio/FILE. Calls fallback() only on real errors (not AbortError).
   function play(file, fallback) {
     try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e) {}
-
     const a = pool.get(file);
     if (!a) {
-      console.warn(`AudioPlayer: ${file} not in pool → TTS fallback`);
+      console.warn(`AudioPlayer: ${file} not in pool`);
       fallback && fallback();
       return;
     }
-
-    // Pause other playing pool elements to avoid overlap
     pool.forEach((el, f) => { if (f !== file && !el.paused) { el.pause(); el.currentTime = 0; } });
-
     a.currentTime = 0;
     const p = a.play();
-    if (p) {
-      p.catch(err => {
-        if (err && err.name === 'AbortError') return; // interrupted by next play(), not an error
-        console.warn(`AudioPlayer: ${file} failed (${err.name}) → TTS fallback`);
-        fallback && fallback();
-      });
-    }
+    if (p) p.catch(err => {
+      if (err && err.name === 'AbortError') return;
+      console.warn(`AudioPlayer: ${file} failed (${err.name})`);
+      fallback && fallback();
+    });
   }
 
-  return { preload, unlock, play };
+  function playCount(n, fallback) {
+    countPool.forEach(a => { if (!a.paused) { a.pause(); a.currentTime = 0; } });
+    const a = countPool.get(n);
+    if (!a) { fallback && fallback(); return; }
+    a.currentTime = 0;
+    const p = a.play();
+    if (p) p.catch(err => {
+      if (err && err.name === 'AbortError') return;
+      fallback && fallback();
+    });
+  }
+
+  return { preload, unlock, play, playCount };
 })();
 
 // ===== SPEECH =====
@@ -940,7 +927,6 @@ const Speech = (() => {
     try {
       speechSynthesis.addEventListener('voiceschanged', selectVoice);
       selectVoice();
-      // iOS unlock: silent utterance
       const u = new SpeechSynthesisUtterance('');
       u.lang = 'ja-JP';
       u.volume = 0;
@@ -961,8 +947,6 @@ const Speech = (() => {
     } catch (e) {}
   }
 
-  // file: optional WAV filename in audio/ (e.g. 'q_a.wav').
-  // Tries AudioPlayer first; falls back to speechSynthesis if unavailable.
   function speak(text, file) {
     if (file && AudioEngine.isEnabled()) {
       AudioPlayer.play(file, () => _tts(text));
@@ -971,32 +955,41 @@ const Speech = (() => {
     _tts(text);
   }
 
+  function speakCount(n) {
+    if (AudioEngine.isEnabled()) {
+      AudioPlayer.playCount(n, () => _tts(COUNT_WORDS[n - 1]));
+      return;
+    }
+    _tts(COUNT_WORDS[n - 1]);
+  }
+
   function cancel() {
     if (!supported) return;
     try { speechSynthesis.cancel(); } catch (e) {}
   }
 
-  return { init, speak, cancel };
+  return { init, speak, speakCount, cancel };
 })();
 
 // ===== GAME STATE =====
 const GameState = (() => {
-  const defaults = () => ({
-    currentCourse: 0,        // 0=mix, 1-10=rows
-    clearCounts: {},         // { courseIndex: timesCleared }
-    totalCorrect: 0,
-  });
+  function defaults() {
+    const numberStats = {};
+    for (let i = 1; i <= 10; i++) numberStats[i] = { asked: 0, correct: 0 };
+    return { totalCorrect: 0, setClearCount: 0, numberStats };
+  }
 
   function load() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
-        // Migration: any old format (had unlockedLevel/unlockedCourse) → reset, keep totalCorrect
-        if (!data.clearCounts) {
-          return { currentCourse: 0, clearCounts: {}, totalCorrect: data.totalCorrect || 0 };
-        }
-        return Object.assign(defaults(), data);
+        const d = defaults();
+        return {
+          totalCorrect: data.totalCorrect || 0,
+          setClearCount: data.setClearCount || 0,
+          numberStats: data.numberStats || d.numberStats,
+        };
       }
     } catch (e) {}
     return defaults();
@@ -1005,9 +998,9 @@ const GameState = (() => {
   function save(state) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        currentCourse: state.currentCourse,
-        clearCounts: state.clearCounts,
         totalCorrect: state.totalCorrect,
+        setClearCount: state.setClearCount,
+        numberStats: state.numberStats,
       }));
     } catch (e) {}
   }
@@ -1022,10 +1015,6 @@ const GameState = (() => {
 
 // ===== QUESTION GENERATOR =====
 const QuestionGenerator = (() => {
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
   function shuffle(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -1035,49 +1024,74 @@ const QuestionGenerator = (() => {
     return a;
   }
 
-  function hasSimilarConflict(chars) {
-    for (const group of SIMILAR_GROUPS) {
-      if (group.filter(c => chars.includes(c)).length >= 2) return true;
-    }
-    return false;
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  // Build a balanced category sequence for 10 questions
+  function makeCategorySeq() {
+    const seq = [];
+    EMOJI_CATEGORIES.forEach((cat, i) => {
+      const n = i === 0 ? 4 : 3; // fruits×4, animals×3, vehicles×3
+      for (let j = 0; j < n; j++) seq.push(cat);
+    });
+    return shuffle(seq);
   }
 
-  function generate(courseIndex, questionIndex, prevTarget) {
-    const courseChars = COURSES[courseIndex].chars;
-
-    // Pick target from course chars, avoiding repeat of previous
-    const targetPool = prevTarget
-      ? courseChars.filter(c => c !== prevTarget)
-      : courseChars;
-    const target = pick(targetPool.length ? targetPool : courseChars);
-
-    const { count, cols } = getTileConfig(questionIndex);
-
-    // Distractor pool: all kana chars except target (ensures variety across all modes)
-    const pool = ALL_CHARS.filter(c => c !== target);
-
-    const applyRule = count <= 6;
-    const distractors = [];
-
-    for (let i = 0; i < count - 1; i++) {
-      let c;
-      let attempts = 0;
-      do {
-        c = pick(pool);
-        attempts++;
-        // After 30 tries, give up on constraint to avoid near-infinite loops
-        if (applyRule && attempts < 30) {
-          if (hasSimilarConflict([target, ...distractors, c])) continue;
-        }
-        break;
-      } while (true);
-      distractors.push(c);
+  function makeChoices(n) {
+    // Collect candidates ±1 then ±2 then ±3, keeping 1-10 range
+    const candidates = [];
+    for (let d = 1; d <= 3 && candidates.length < 4; d++) {
+      if (n - d >= 1) candidates.push(n - d);
+      if (n + d <= 10) candidates.push(n + d);
     }
-
-    return { target, tiles: shuffle([target, ...distractors]), count, cols };
+    // Take closest 2 wrong answers
+    const wrong = candidates.slice(0, 2);
+    return shuffle([n, ...wrong]);
   }
 
-  return { generate };
+  // Place N emoji without overlap using grid + jitter
+  function computePositions(count, fieldW, fieldH) {
+    const ITEM_HALF = 44; // half of 88px tap area
+    const cols = Math.max(2, Math.min(5, Math.ceil(Math.sqrt(count * fieldW / Math.max(fieldH, 1)))));
+    const rows = Math.ceil(count / cols);
+
+    const cellW = fieldW / cols;
+    const cellH = fieldH / rows;
+
+    const cells = [];
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) cells.push({ c, r });
+    }
+    const chosen = shuffle(cells).slice(0, count);
+
+    const jx = Math.max(0, (cellW / 2 - ITEM_HALF) * 0.7);
+    const jy = Math.max(0, (cellH / 2 - ITEM_HALF) * 0.7);
+
+    return chosen.map(({ c, r }) => {
+      const cx = (c + 0.5) * cellW;
+      const cy = (r + 0.5) * cellH;
+      const x = Math.min(fieldW - ITEM_HALF, Math.max(ITEM_HALF, cx + (Math.random() - 0.5) * 2 * jx));
+      const y = Math.min(fieldH - ITEM_HALF, Math.max(ITEM_HALF, cy + (Math.random() - 0.5) * 2 * jy));
+      return { x, y };
+    });
+  }
+
+  function generate(questionIndex, prevN, categorySeq) {
+    // Pick N 1-10, avoid repeating prevN
+    let n;
+    let tries = 0;
+    do {
+      n = Math.floor(Math.random() * 10) + 1;
+      tries++;
+    } while (n === prevN && tries < 20);
+
+    const category = categorySeq[questionIndex % categorySeq.length];
+    const emoji = pick(EMOJI_POOLS[category]);
+    const choices = makeChoices(n);
+
+    return { n, emoji, choices };
+  }
+
+  return { makeCategorySeq, generate, computePositions };
 })();
 
 // ===== UI =====
@@ -1087,10 +1101,9 @@ const UI = (() => {
 
   const screens = {
     splash: document.getElementById('screen-splash'),
-    start: document.getElementById('screen-start'),
-    level: document.getElementById('screen-level'),
-    game: document.getElementById('screen-game'),
-    clear: document.getElementById('screen-clear'),
+    start:  document.getElementById('screen-start'),
+    game:   document.getElementById('screen-game'),
+    clear:  document.getElementById('screen-clear'),
   };
 
   function showScreen(name) {
@@ -1098,7 +1111,6 @@ const UI = (() => {
     screens[name].classList.add('active');
   }
 
-  // ---- PROGRESS ----
   function renderProgress(current, total) {
     document.getElementById('progress-label').textContent = `${current} / ${total}`;
     const dots = document.getElementById('progress-dots');
@@ -1110,39 +1122,17 @@ const UI = (() => {
     }
   }
 
-  // ---- COURSE SELECT ----
-  function renderCourseSelect() {
-    const grid = document.getElementById('level-grid');
-    grid.innerHTML = '';
-    COURSES.forEach((course, i) => {
-      const card = document.createElement('button');
-      const cleared = (state.clearCounts[i] || 0) > 0;
-      const charPreview = course.chars.length > 8 ? 'あ〜ん' : course.chars.join('');
-      card.className = 'level-card unlocked';
-      card.innerHTML = `
-        <span class="level-num">${course.emoji}</span>
-        <span class="level-label">${course.name}${cleared ? ' ⭐' : ''}</span>
-        <span class="course-chars">${charPreview}</span>`;
-      card.addEventListener('click', () => {
-        AudioEngine.playClick();
-        state.currentCourse = i;
-        GameState.save(state);
-        startGame();
-      });
-      grid.appendChild(card);
-    });
-    showScreen('level');
-  }
-
   // ---- GAME ----
   function startGame() {
     session = {
       questionIndex: 0,
-      correctCount: 0,
       wrongCount: 0,
-      prevTarget: null,
+      prevN: null,
       locked: false,
-      target: null,
+      n: null,
+      tapCount: 0,
+      hintShown: false,
+      categorySeq: QuestionGenerator.makeCategorySeq(),
     };
     showScreen('game');
     nextQuestion();
@@ -1151,62 +1141,131 @@ const UI = (() => {
   function nextQuestion() {
     session.locked = false;
     session.wrongCount = 0;
+    session.tapCount = 0;
+    session.hintShown = false;
 
-    const { target, tiles, count, cols } = QuestionGenerator.generate(
-      state.currentCourse,
+    const { n, emoji, choices } = QuestionGenerator.generate(
       session.questionIndex,
-      session.prevTarget
+      session.prevN,
+      session.categorySeq
     );
-    session.target = target;
-    session.prevTarget = target;
+    session.n = n;
+    session.prevN = n;
 
-    document.getElementById('question-char').textContent = target;
-    renderTiles(tiles, cols);
+    // Track asked count for this number
+    state.numberStats[n].asked++;
+    GameState.save(state);
+
     renderProgress(session.questionIndex, QUESTIONS_PER_SET);
+    renderAnswerButtons(choices);
 
-    Speech.speak(`${target}、どこにあるかな`, `q_${CHAR_FILE[target]}.wav`);
+    requestAnimationFrame(() => {
+      renderEmojiField(n, emoji);
+    });
+
+    Speech.speak('いくつ あるかな', 'question.wav');
   }
 
-  function renderTiles(tiles, cols) {
-    const grid = document.getElementById('tile-grid');
-    grid.innerHTML = '';
-    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  function emojiSize(n) {
+    if (n <= 3) return '60px';
+    if (n <= 6) return '50px';
+    return '40px';
+  }
 
-    tiles.forEach((char, i) => {
-      const tile = document.createElement('button');
-      tile.className = 'tile';
-      tile.textContent = char;
-      tile.style.borderColor = TILE_BORDER_COLORS[i % TILE_BORDER_COLORS.length];
-      tile.style.borderWidth = '4px';
-      tile.dataset.char = char;
-      tile.addEventListener('click', () => onTileTap(tile, char));
-      grid.appendChild(tile);
+  function renderEmojiField(n, emoji) {
+    const field = document.getElementById('emoji-field');
+    field.innerHTML = '';
+    const { width: W, height: H } = field.getBoundingClientRect();
+    if (W === 0 || H === 0) {
+      setTimeout(() => renderEmojiField(n, emoji), 50);
+      return;
+    }
+    const positions = QuestionGenerator.computePositions(n, W, H);
+    const fsize = emojiSize(n);
+
+    positions.forEach((pos, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'emoji-item';
+      btn.style.left = pos.x + 'px';
+      btn.style.top  = pos.y + 'px';
+      btn.style.fontSize = fsize;
+      btn.setAttribute('aria-label', emoji);
+      btn.dataset.index = i;
+
+      const span = document.createElement('span');
+      span.textContent = emoji;
+      btn.appendChild(span);
+
+      btn.addEventListener('click', () => onEmojiTap(btn));
+      field.appendChild(btn);
     });
   }
 
-  function onTileTap(tile, char) {
+  function onEmojiTap(btn) {
     if (session.locked) return;
-    if (char === session.target) onCorrect(tile);
-    else onWrong(tile);
+    if (btn.classList.contains('tapped')) return;
+
+    session.tapCount++;
+    const tapNum = session.tapCount;
+
+    btn.classList.add('tapped');
+
+    const badge = document.createElement('span');
+    badge.className = 'count-badge';
+    badge.textContent = tapNum;
+    btn.appendChild(badge);
+
+    btn.classList.add('bounce');
+    setTimeout(() => btn.classList.remove('bounce'), 450);
+
+    AudioEngine.playPop();
+    Speech.speakCount(tapNum);
   }
 
-  function onCorrect(tile) {
+  function renderAnswerButtons(choices) {
+    const row = document.getElementById('answer-row');
+    row.innerHTML = '';
+    choices.forEach((num, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = num;
+      btn.style.borderColor = ANSWER_COLORS[i % ANSWER_COLORS.length];
+      btn.dataset.num = num;
+      btn.addEventListener('click', () => onAnswerTap(btn, num));
+      row.appendChild(btn);
+    });
+  }
+
+  function onAnswerTap(btn, num) {
+    if (session.locked) return;
+    if (num === session.n) onCorrect(btn, num);
+    else onWrong(btn);
+  }
+
+  function onCorrect(btn, num) {
     session.locked = true;
-    disableAllTiles();
-    tile.classList.add('correct');
+    disableAllAnswers();
+    btn.classList.add('correct');
     AudioEngine.playCorrect();
-    spawnStars(tile);
+    spawnStars(btn);
     jumpCharacter();
-    Speech.speak('できたね！', 'ok.wav');
+
+    // First-attempt correct tracking
+    if (session.wrongCount === 0) {
+      state.numberStats[num].correct++;
+    }
+    state.totalCorrect++;
+    GameState.save(state);
+
+    const praises = ['できたね！', 'すごい！', 'やったね！'];
+    const praiseIdx = Math.floor(Math.random() * 3) + 1;
+    Speech.speak(praises[praiseIdx - 1], `praise_${praiseIdx}.wav`);
 
     session.questionIndex++;
-    session.correctCount++;
-    state.totalCorrect++;
     renderProgress(session.questionIndex, QUESTIONS_PER_SET);
 
     if (session.questionIndex >= QUESTIONS_PER_SET) {
-      if (!state.clearCounts) state.clearCounts = {};
-      state.clearCounts[state.currentCourse] = (state.clearCounts[state.currentCourse] || 0) + 1;
+      state.setClearCount++;
       GameState.save(state);
       setTimeout(showClear, NEXT_DELAY);
     } else {
@@ -1214,24 +1273,25 @@ const UI = (() => {
     }
   }
 
-  function onWrong(tile) {
-    tile.classList.add('wrong');
+  function onWrong(btn) {
+    btn.classList.add('wrong');
     AudioEngine.playWrong();
-    setTimeout(() => tile.classList.remove('wrong'), 450);
+    setTimeout(() => btn.classList.remove('wrong'), 450);
     session.wrongCount++;
-    if (session.wrongCount >= HINT_THRESHOLD) showHint();
+    if (session.wrongCount >= HINT_THRESHOLD && !session.hintShown) showHint();
   }
 
   function showHint() {
-    document.getElementById('tile-grid').querySelectorAll('.tile').forEach(t => {
-      if (t.dataset.char === session.target) t.classList.add('hint-pulse');
+    session.hintShown = true;
+    document.getElementById('answer-row').querySelectorAll('.answer-btn').forEach(b => {
+      if (parseInt(b.dataset.num) === session.n) b.classList.add('hint-pulse');
     });
-    Speech.speak(`${session.target}、どこにあるかな`, `q_${CHAR_FILE[session.target]}.wav`);
+    Speech.speak('もういちど かぞえてみよう', 'hint.wav');
   }
 
-  function disableAllTiles() {
-    document.getElementById('tile-grid').querySelectorAll('.tile')
-      .forEach(t => t.classList.add('disabled'));
+  function disableAllAnswers() {
+    document.getElementById('answer-row').querySelectorAll('.answer-btn')
+      .forEach(b => b.classList.add('disabled'));
   }
 
   function jumpCharacter() {
@@ -1242,42 +1302,32 @@ const UI = (() => {
     setTimeout(() => c.classList.remove('jump'), 600);
   }
 
-  function spawnStars(tile) {
-    const rect = tile.getBoundingClientRect();
+  function spawnStars(el) {
+    const rect = el.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
     const stars = ['⭐','✨','🌟'];
     for (let i = 0; i < 5; i++) {
-      const el = document.createElement('div');
-      el.className = 'star-burst';
-      el.textContent = stars[i % stars.length];
+      const star = document.createElement('div');
+      star.className = 'star-burst';
+      star.textContent = stars[i % stars.length];
       const angle = (i / 5) * Math.PI * 2;
       const dist = 60 + Math.random() * 50;
-      el.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-      el.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-      el.style.left = cx + 'px';
-      el.style.top = cy + 'px';
-      document.body.appendChild(el);
-      setTimeout(() => el.remove(), 850);
+      star.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      star.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      star.style.left = cx + 'px';
+      star.style.top  = cy + 'px';
+      document.body.appendChild(star);
+      setTimeout(() => star.remove(), 850);
     }
   }
 
   // ---- CLEAR ----
   function showClear() {
     AudioEngine.playClear();
-    Speech.speak('すごい！ぜんぶできたね！', 'clear.wav');
+    Speech.speak('ぜんぶ できたね！', 'clear.wav');
     spawnConfetti();
-
-    const course = COURSES[state.currentCourse];
-    const isMix = state.currentCourse === 0;
-    const isLast = state.currentCourse >= COURSES.length - 1;
-    document.getElementById('clear-subtitle').textContent = `${course.name} クリア！`;
-
-    const btnNext = document.getElementById('btn-next');
-    btnNext.textContent = (isMix || isLast)
-      ? 'もういちど'
-      : `${COURSES[state.currentCourse + 1].name} へ →`;
-
+    document.getElementById('clear-subtitle').textContent = '10もん ぜんぶ できたね！';
     showScreen('clear');
   }
 
@@ -1290,20 +1340,47 @@ const UI = (() => {
       piece.className = 'confetti-piece';
       piece.style.left = Math.random() * 100 + 'vw';
       piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-      piece.style.width = (8 + Math.random() * 8) + 'px';
+      piece.style.width  = (8 + Math.random() * 8) + 'px';
       piece.style.height = (8 + Math.random() * 8) + 'px';
       piece.style.animationDuration = (2 + Math.random() * 2) + 's';
-      piece.style.animationDelay = (Math.random() * 1) + 's';
+      piece.style.animationDelay    = (Math.random() * 1) + 's';
       piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
       container.appendChild(piece);
     }
-    setTimeout(() => { container.innerHTML = ''; }, 4000);
+    setTimeout(() => { container.innerHTML = ''; }, 4500);
   }
 
   // ---- PARENT MENU ----
   function openParentMenu() {
+    renderParentStats();
     updateVolumeUI();
     document.getElementById('modal-parent').classList.add('active');
+  }
+
+  function renderParentStats() {
+    const el = document.getElementById('parent-stats');
+    if (!el) return;
+
+    const totalAsked = Object.values(state.numberStats).reduce((s, v) => s + v.asked, 0);
+    const totalFirst = Object.values(state.numberStats).reduce((s, v) => s + v.correct, 0);
+    const accuracy = totalAsked > 0 ? Math.round(totalFirst / totalAsked * 100) : 0;
+
+    let html = `
+      <div class="stat-row"><span>せいかい（のべ）</span><strong>${state.totalCorrect}もん</strong></div>
+      <div class="stat-row"><span>クリア</span><strong>${state.setClearCount}かい</strong></div>
+      <div class="stat-row"><span>1かいめせいかいりつ</span><strong>${accuracy}%</strong></div>
+      <div class="num-stats-label">かずべつ せいかいりつ（1かいめ）</div>
+      <div class="number-stats-grid">`;
+    for (let n = 1; n <= 10; n++) {
+      const ns = state.numberStats[n];
+      const pct = ns.asked > 0 ? Math.round(ns.correct / ns.asked * 100) + '%' : '-';
+      html += `<div class="num-stat-cell">
+        <span class="num-label">${n}</span>
+        <span class="num-pct">${pct}</span>
+      </div>`;
+    }
+    html += '</div>';
+    el.innerHTML = html;
   }
 
   function updateVolumeUI() {
@@ -1321,26 +1398,7 @@ const UI = (() => {
       AudioPlayer.unlock();
       Speech.init();
       AudioEngine.playClick();
-      state.currentCourse = state.currentCourse || 0;
-      GameState.save(state);
       startGame();
-    });
-
-    document.getElementById('btn-level-select').addEventListener('click', () => {
-      AudioEngine.resume();
-      AudioPlayer.unlock();
-      Speech.init();
-      state = GameState.load();
-      renderCourseSelect();
-    });
-
-    document.getElementById('btn-back-start').addEventListener('click', () => {
-      showScreen('start');
-    });
-
-    document.getElementById('btn-home-level').addEventListener('click', () => {
-      AudioEngine.playClick();
-      showScreen('start');
     });
 
     document.getElementById('btn-home-game').addEventListener('click', () => {
@@ -1351,15 +1409,11 @@ const UI = (() => {
 
     document.getElementById('btn-speak').addEventListener('click', () => {
       AudioEngine.playClick();
-      Speech.speak(`${session.target}、どこにあるかな`, `q_${CHAR_FILE[session.target]}.wav`);
+      Speech.speak('いくつ あるかな', 'question.wav');
     });
 
     document.getElementById('btn-next').addEventListener('click', () => {
       AudioEngine.playClick();
-      const isMix = state.currentCourse === 0;
-      const isLast = state.currentCourse >= COURSES.length - 1;
-      if (!isMix && !isLast) state.currentCourse++;
-      GameState.save(state);
       startGame();
     });
 
@@ -1369,7 +1423,7 @@ const UI = (() => {
       showScreen('start');
     });
 
-    // Gear - 3 second long press (Pointer Events)
+    // Gear - 3 second long press
     let gearTimer = null;
     const gearBtn = document.getElementById('btn-gear');
     function startGearHold(e) {
@@ -1418,7 +1472,7 @@ const UI = (() => {
       document.getElementById('modal-parent').classList.add('active');
     });
 
-    // Splash → start transition
+    // Splash → start
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       showScreen('start');
     } else {
@@ -1439,7 +1493,7 @@ const UI = (() => {
 
 // Boot
 UI.init();
-AudioPlayer.preload(); // 全音声ファイルをバックグラウンドで先読み
+AudioPlayer.preload();
 </script>
 </body>
 </html>

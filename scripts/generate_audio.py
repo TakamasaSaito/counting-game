@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate VOICEVOX audio files for ひらがなたからさがし.
+Generate VOICEVOX audio files for いくつあるかな.
 話者: ずんだもん (あまあまスタイル)
 
 Usage (run from project root):
@@ -23,7 +23,6 @@ from typing import Dict, List, Optional
 
 def _windows_host_ip():
     # type: () -> str
-    """WSL の default gateway = Windows ホスト IP を返す。取得失敗時は空文字。"""
     try:
         out = subprocess.check_output(['ip', 'route', 'show'], text=True)
         for line in out.splitlines():
@@ -42,33 +41,30 @@ HOSTS = (
 )
 OUT_DIR = 'audio'
 
-CHAR_ROMAJI = {
-    'あ': 'a',  'い': 'i',  'う': 'u',  'え': 'e',  'お': 'o',
-    'か': 'ka', 'き': 'ki', 'く': 'ku', 'け': 'ke', 'こ': 'ko',
-    'さ': 'sa', 'し': 'si', 'す': 'su', 'せ': 'se', 'そ': 'so',
-    'た': 'ta', 'ち': 'ti', 'つ': 'tu', 'て': 'te', 'と': 'to',
-    'な': 'na', 'に': 'ni', 'ぬ': 'nu', 'ね': 'ne', 'の': 'no',
-    'は': 'ha', 'ひ': 'hi', 'ふ': 'fu', 'へ': 'he', 'ほ': 'ho',
-    'ま': 'ma', 'み': 'mi', 'む': 'mu', 'め': 'me', 'も': 'mo',
-    'や': 'ya', 'ゆ': 'yu', 'よ': 'yo',
-    'ら': 'ra', 'り': 'ri', 'る': 'ru', 'れ': 're', 'ろ': 'ro',
-    'わ': 'wa', 'を': 'wo', 'ん': 'n',
-}
-
 # filename (without .wav) → text to synthesize
-# 問題文: 「文字、どこにあるかな」(語尾上がり防止のため「?」なし)
 PHRASE_FILES = {  # type: Dict[str, str]
-    **{f'q_{r}': f'{c}、どこにあるかな' for c, r in CHAR_ROMAJI.items()},
-    'ok':    'できたね！',
-    'clear': 'すごい！ぜんぶできたね！',
-    'retry': 'もういっかい！',
-    'cheer': 'がんばったね！',
+    'count_1':  'いち',
+    'count_2':  'に',
+    'count_3':  'さん',
+    'count_4':  'し',
+    'count_5':  'ご',
+    'count_6':  'ろく',
+    'count_7':  'しち',
+    'count_8':  'はち',
+    'count_9':  'きゅう',
+    'count_10': 'じゅう',
+    'question': 'いくつ あるかな',
+    'praise_1': 'できたね！',
+    'praise_2': 'すごい！',
+    'praise_3': 'やったね！',
+    'hint':     'もういちど かぞえてみよう',
+    'clear':    'ぜんぶ できたね！',
 }
 
-# Prosody tweaks (VOICEVOX range: speedScale 0.5-2.0, pitchScale ±0.15)
-SPEED   = 1.05
-PITCH   = 0.04
-INTON   = 1.2
+# Prosody tweaks
+SPEED = 1.05
+PITCH = 0.04
+INTON = 1.2
 
 
 # --- VOICEVOX API helpers ---------------------------------------------
@@ -98,12 +94,11 @@ def find_speaker_id(base):
             for style in spk['styles']:
                 if 'あまあま' in style['name']:
                     return style['id']
-            return spk['styles'][0]['id']   # fallback: first style
+            return spk['styles'][0]['id']
     raise RuntimeError('「ずんだもん」が見つかりません。VOICEVOXのバージョンを確認してください。')
 
 
 def synthesize(base, text, speaker_id, out_path):
-    # Step 1: audio_query
     qs = urllib.parse.urlencode({'text': text, 'speaker': speaker_id})
     req = urllib.request.Request(
         f'{base}/audio_query?{qs}',
@@ -114,19 +109,19 @@ def synthesize(base, text, speaker_id, out_path):
     with urllib.request.urlopen(req, timeout=30) as r:
         query = json.loads(r.read())
 
-    query['speedScale']      = SPEED
-    query['pitchScale']      = PITCH
-    query['intonationScale'] = INTON
-    query['prePhonemeLength'] = 0.3   # 冒頭無音: 再生開始時の頭切れ対策
+    query['speedScale']       = SPEED
+    query['pitchScale']       = PITCH
+    query['intonationScale']  = INTON
+    query['prePhonemeLength'] = 0.3   # 頭切れ対策
 
     for ap in query['accent_phrases']:
         ap['is_interrogative'] = False  # 語尾上がり防止
-    # 先頭フレーズ(単文字)後の読点ポーズを統一
+
+    # 先頭フレーズ後の読点ポーズ
     first = query['accent_phrases'][0]
     if first.get('pause_mora'):
         first['pause_mora']['vowel_length'] = 0.70
 
-    # Step 2: synthesis → WAV bytes
     qs2 = urllib.parse.urlencode({'speaker': speaker_id})
     body = json.dumps(query, ensure_ascii=False).encode('utf-8')
     req2 = urllib.request.Request(
@@ -168,7 +163,7 @@ def main() -> None:
         except Exception as e:
             print(f'FAILED: {e}')
             errors.append(name)
-        time.sleep(0.05)   # gentle rate limiting
+        time.sleep(0.05)
 
     print(f'\n完了: {total - len(errors)}/{total} ファイル → {OUT_DIR}/')
     if errors:
