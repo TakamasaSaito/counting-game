@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ひらがな">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-512.png">
+<title>ひらがなたからさがし</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-start: #667eea;
+  --bg-end: #764ba2;
+  --accent: #FECA57;
+  --white: #fff;
+  --text-dark: #2d3436;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: -apple-system, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', sans-serif;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+}
+
+body {
+  background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+.screen {
+  display: none;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
+  position: absolute;
+  inset: 0;
+}
+.screen.active { display: flex; }
+
+/* ===== START SCREEN ===== */
+#screen-start { gap: 4vmin; position: relative; }
+
+.app-title {
+  font-size: clamp(32px, 10vmin, 72px);
+  font-weight: 900;
+  color: var(--white);
+  text-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.app-subtitle {
+  font-size: clamp(16px, 4vmin, 28px);
+  color: rgba(255,255,255,0.85);
+  text-align: center;
+}
+
+.character-idle {
+  font-size: clamp(60px, 18vmin, 120px);
+  animation: float 3s ease-in-out infinite;
+  display: block;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.btn-primary {
+  touch-action: manipulation;
+  background: var(--accent);
+  color: var(--text-dark);
+  border: none;
+  border-radius: 50px;
+  font-size: clamp(22px, 6vmin, 42px);
+  font-weight: 900;
+  padding: 0.6em 2em;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.15);
+  transition: transform 0.1s, box-shadow 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-primary:active { transform: scale(0.95); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+
+.btn-secondary {
+  touch-action: manipulation;
+  background: rgba(255,255,255,0.25);
+  color: var(--white);
+  border: 2px solid rgba(255,255,255,0.6);
+  border-radius: 50px;
+  font-size: clamp(14px, 3.5vmin, 24px);
+  font-weight: 700;
+  padding: 0.5em 1.5em;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-secondary:active { transform: scale(0.95); background: rgba(255,255,255,0.35); }
+
+.gear-btn {
+  touch-action: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  position: fixed;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  right: max(16px, env(safe-area-inset-right));
+  background: rgba(255,255,255,0.15);
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 100;
+}
+.gear-btn.holding { background: rgba(255,255,255,0.30); }
+.gear-ring {
+  position: absolute;
+  inset: -5px;
+  width: calc(100% + 10px);
+  height: calc(100% + 10px);
+  transform: rotate(-90deg);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.gear-btn.holding .gear-ring { opacity: 1; }
+.gear-ring-fill {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  stroke-dasharray: 169.6;   /* 2π × 27 */
+  stroke-dashoffset: 169.6;
+  transition: none;
+}
+.gear-btn.holding .gear-ring-fill {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 3s linear;
+}
+
+.home-btn {
+  touch-action: manipulation;
+  position: absolute;
+  top: max(10px, env(safe-area-inset-top));
+  left: max(10px, env(safe-area-inset-left));
+  background: rgba(255,255,255,0.18);
+  border: none;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 10;
+}
+.home-btn:active { background: rgba(255,255,255,0.35); transform: scale(0.9); }
+
+/* ===== COURSE SELECT ===== */
+#screen-level { gap: 2vmin; overflow: hidden; }
+
+.screen-title {
+  font-size: clamp(22px, 6vmin, 42px);
+  font-weight: 900;
+  color: var(--white);
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+.level-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(6px, 1.5vmin, 10px);
+  width: min(400px, 90vw);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  max-height: 62vh;
+  padding: 4px 2px 8px;
+}
+
+.level-card {
+  touch-action: manipulation;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15em;
+  font-weight: 900;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  padding: clamp(8px, 2vmin, 14px) 0.4em;
+  min-height: clamp(72px, 14vmin, 88px);
+}
+.level-card:active:not(.locked) { transform: scale(0.95); }
+.level-card.unlocked { background: var(--white); color: var(--text-dark); }
+.level-card.locked {
+  background: rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.45);
+  cursor: default;
+}
+
+.level-card .level-num { font-size: clamp(22px, 6vmin, 36px); line-height: 1; }
+.level-card .level-label { font-size: clamp(13px, 3vmin, 18px); }
+.level-card .course-chars {
+  font-size: clamp(9px, 2vmin, 12px);
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+}
+.level-card .lock-icon { font-size: clamp(22px, 6vmin, 36px); }
+
+/* ===== GAME SCREEN ===== */
+#screen-game {
+  justify-content: space-between;
+  padding-top: max(12px, env(safe-area-inset-top));
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  gap: 2vmin;
+}
+
+.question-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1vmin;
+  width: 100%;
+}
+
+.question-label {
+  color: rgba(255,255,255,0.8);
+  font-size: clamp(14px, 3.5vmin, 22px);
+  font-weight: 700;
+}
+
+.question-row {
+  display: flex;
+  align-items: center;
+  gap: 2vmin;
+}
+
+.question-char {
+  font-size: clamp(48px, 14vmin, 96px);
+  font-weight: 900;
+  color: var(--white);
+  text-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  background: rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 0.1em 0.3em;
+  line-height: 1;
+}
+
+.speak-btn {
+  touch-action: manipulation;
+  background: rgba(255,255,255,0.25);
+  border: 2px solid rgba(255,255,255,0.6);
+  border-radius: 50%;
+  width: clamp(44px, 10vmin, 64px);
+  height: clamp(44px, 10vmin, 64px);
+  font-size: clamp(20px, 5vmin, 32px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+}
+.speak-btn:active { transform: scale(0.9); }
+
+.character-game {
+  font-size: clamp(32px, 8vmin, 60px);
+  transition: transform 0.2s;
+  line-height: 1;
+}
+.character-game.jump { animation: jump 0.5s ease-out; }
+@keyframes jump {
+  0% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-20px) scale(1.1); }
+  60% { transform: translateY(-8px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+/* ===== TILE GRID ===== */
+.tile-grid {
+  display: grid;
+  gap: clamp(8px, 2.5vmin, 16px);
+  width: 100%;
+  max-width: min(480px, 92vw);
+  flex: 1;
+  align-content: center;
+}
+
+.tile {
+  touch-action: manipulation;
+  aspect-ratio: 1;
+  border-radius: clamp(12px, 3vmin, 20px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(28px, 9vmin, 68px);
+  font-weight: 900;
+  color: var(--text-dark);
+  background: var(--white);
+  border: 4px solid transparent;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15), 0 2px 6px rgba(0,0,0,0.1);
+  transition: transform 0.1s, box-shadow 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  overflow: hidden;
+  min-height: 88px;
+  min-width: 88px;
+}
+.tile:active { transform: scale(0.92); }
+.tile.disabled { pointer-events: none; }
+
+.tile.correct {
+  animation: bounce 0.5s ease-out;
+  background: #FECA57;
+  border-color: #f39c12;
+}
+@keyframes bounce {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  60% { transform: scale(0.95); }
+  80% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+.tile.wrong { animation: shake 0.4s ease-out; }
+@keyframes shake {
+  0% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+
+.tile.hint-pulse {
+  animation: pulse-hint 1.5s ease-in-out infinite;
+  border-color: #FECA57;
+}
+@keyframes pulse-hint {
+  0%, 100% { box-shadow: 0 4px 16px rgba(0,0,0,0.15), 0 0 0 0 rgba(254,202,87,0.7); }
+  50% { box-shadow: 0 4px 16px rgba(0,0,0,0.15), 0 0 0 12px rgba(254,202,87,0); }
+}
+
+/* ===== PROGRESS ===== */
+.progress-area {
+  display: flex;
+  align-items: center;
+  gap: 1.5vmin;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0.5em;
+}
+
+.progress-label {
+  color: rgba(255,255,255,0.8);
+  font-size: clamp(12px, 3vmin, 18px);
+  font-weight: 700;
+}
+
+.progress-dots { display: flex; gap: clamp(4px, 1.5vmin, 8px); }
+
+.progress-dot {
+  width: clamp(10px, 2.5vmin, 16px);
+  height: clamp(10px, 2.5vmin, 16px);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  border: 2px solid rgba(255,255,255,0.5);
+  transition: background 0.2s, transform 0.2s;
+}
+.progress-dot.filled {
+  background: var(--accent);
+  border-color: #f39c12;
+  transform: scale(1.1);
+}
+
+/* ===== CLEAR SCREEN ===== */
+#screen-clear { gap: 3vmin; position: relative; overflow: hidden; }
+
+.clear-title {
+  font-size: clamp(36px, 12vmin, 80px);
+  font-weight: 900;
+  color: var(--accent);
+  text-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  animation: pop-in 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes pop-in {
+  from { transform: scale(0.3); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.clear-character {
+  font-size: clamp(64px, 20vmin, 130px);
+  animation: celebrate 0.6s ease-out 0.3s both;
+}
+@keyframes celebrate {
+  0% { transform: scale(0) rotate(-20deg); }
+  60% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.clear-subtitle {
+  font-size: clamp(18px, 5vmin, 36px);
+  color: var(--white);
+  font-weight: 700;
+  text-align: center;
+}
+
+.clear-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 2vmin;
+  align-items: center;
+  width: 100%;
+  max-width: min(320px, 85vw);
+}
+
+/* ===== CONFETTI ===== */
+.confetti-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: -20px;
+  animation: confetti-fall linear forwards;
+  border-radius: 2px;
+}
+@keyframes confetti-fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+}
+
+/* ===== STAR BURST ===== */
+.star-burst {
+  position: fixed;
+  pointer-events: none;
+  z-index: 150;
+  font-size: clamp(20px, 5vmin, 36px);
+  animation: star-fly 0.8s ease-out forwards;
+}
+@keyframes star-fly {
+  0% { transform: translate(0,0) scale(0.5); opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(1.2); opacity: 0; }
+}
+
+/* ===== PARENT MENU ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.active { display: flex; }
+
+.modal-box {
+  background: var(--white);
+  border-radius: 24px;
+  padding: 2em;
+  width: min(320px, 88vw);
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: clamp(18px, 5vmin, 26px);
+  font-weight: 900;
+  color: var(--text-dark);
+}
+
+.modal-body {
+  font-size: clamp(14px, 3.5vmin, 18px);
+  color: #636e72;
+  text-align: center;
+}
+
+.modal-row { display: flex; gap: 1em; width: 100%; justify-content: center; }
+
+.btn-modal {
+  touch-action: manipulation;
+  flex: 1;
+  border: none;
+  border-radius: 50px;
+  padding: 0.7em 1em;
+  font-size: clamp(14px, 3.5vmin, 18px);
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-modal.danger { background: #e17055; color: var(--white); }
+.btn-modal.cancel { background: #dfe6e9; color: var(--text-dark); }
+.btn-modal:active { transform: scale(0.95); }
+
+.volume-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  font-size: clamp(14px, 3.5vmin, 18px);
+  font-weight: 700;
+  color: var(--text-dark);
+}
+
+.toggle-switch {
+  touch-action: manipulation;
+  width: 52px;
+  height: 28px;
+  background: #dfe6e9;
+  border-radius: 14px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: none;
+  flex-shrink: 0;
+}
+.toggle-switch.on { background: #54A0FF; }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: var(--white);
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: transform 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle-switch.on::after { transform: translateX(24px); }
+
+.modal-credit {
+  font-size: clamp(10px, 2.5vmin, 12px);
+  color: #b2bec3;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ===== SPLASH SCREEN ===== */
+#screen-splash { gap: 5vmin; cursor: pointer; }
+.splash-fox {
+  font-size: clamp(90px, 24vmin, 160px);
+  display: block;
+  animation: splash-bounce 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.splash-title {
+  font-size: clamp(32px, 10vmin, 72px);
+  font-weight: 900;
+  color: var(--white);
+  text-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  text-align: center;
+  line-height: 1.2;
+  animation: splash-fadein 0.5s ease both 0.55s;
+}
+@keyframes splash-bounce {
+  0%   { transform: scale(0) translateY(-50px); opacity: 0; }
+  55%  { transform: scale(1.18) translateY(0);  opacity: 1; }
+  75%  { transform: scale(0.93) translateY(0); }
+  100% { transform: scale(1)    translateY(0);  opacity: 1; }
+}
+@keyframes splash-fadein {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .character-idle, .character-game.jump, .tile.correct,
+  .tile.wrong, .tile.hint-pulse, .clear-title, .clear-character,
+  .star-burst, .confetti-piece, .splash-fox, .splash-title,
+  .gear-ring-fill {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* landscape adjustments */
+@media (orientation: landscape) and (max-height: 500px) {
+  #screen-game { flex-direction: row; flex-wrap: wrap; padding: 8px 16px; }
+  .question-area { width: 35%; flex-direction: column; justify-content: center; }
+  .tile-grid { flex: 1; max-width: 55vw; }
+  .progress-area { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- SPLASH SCREEN -->
+<div id="screen-splash" class="screen active">
+  <span class="splash-fox" aria-hidden="true">🦊</span>
+  <div class="splash-title">ひらがな<br>たからさがし</div>
+</div>
+
+<!-- START SCREEN -->
+<div id="screen-start" class="screen">
+  <span class="character-idle" id="char-start" aria-hidden="true">🦊</span>
+  <div class="app-title">ひらがな<br>たからさがし</div>
+  <div class="app-subtitle">もじをさがしてみよう！</div>
+  <button class="btn-primary" id="btn-start" aria-label="はじめる">はじめる</button>
+  <button class="btn-secondary" id="btn-level-select" style="margin-top:0.5em">もじをえらぶ</button>
+  <button class="gear-btn" id="btn-gear" aria-label="せってい">⚙
+    <svg class="gear-ring" viewBox="0 0 54 54" aria-hidden="true">
+      <circle class="gear-ring-fill" cx="27" cy="27" r="27"/>
+    </svg>
+  </button>
+</div>
+
+<!-- COURSE SELECT SCREEN -->
+<div id="screen-level" class="screen">
+  <button class="home-btn" id="btn-home-level" aria-label="ホームにもどる">🏠</button>
+  <div class="screen-title">こうすをえらぼう</div>
+  <div class="level-grid" id="level-grid"></div>
+  <button class="btn-secondary" id="btn-back-start">もどる</button>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="screen-game" class="screen">
+  <button class="home-btn" id="btn-home-game" aria-label="ホームにもどる">🏠</button>
+  <div class="question-area">
+    <div class="question-label">これをさがそう！</div>
+    <div class="question-row">
+      <div class="question-char" id="question-char">あ</div>
+      <button class="speak-btn" id="btn-speak" aria-label="もういちどよむ">🔊</button>
+      <span class="character-game" id="char-game" aria-hidden="true">🦊</span>
+    </div>
+  </div>
+  <div class="tile-grid" id="tile-grid"></div>
+  <div class="progress-area">
+    <span class="progress-label" id="progress-label">1 / 10</span>
+    <div class="progress-dots" id="progress-dots"></div>
+  </div>
+</div>
+
+<!-- CLEAR SCREEN -->
+<div id="screen-clear" class="screen">
+  <div class="clear-title" id="clear-title">すごい！</div>
+  <div class="clear-character" aria-hidden="true">🦊✨</div>
+  <div class="clear-subtitle" id="clear-subtitle">10もん ぜんぶ できたね！</div>
+  <div class="clear-buttons">
+    <button class="btn-primary" id="btn-next" style="width:100%">つぎへ →</button>
+    <button class="btn-secondary" id="btn-quit" style="width:100%">おわる</button>
+  </div>
+  <div class="confetti-container" id="confetti-container"></div>
+</div>
+
+<!-- PARENT MENU MODAL -->
+<div class="modal-overlay" id="modal-parent">
+  <div class="modal-box">
+    <div class="modal-title">⚙ せってい（おとなむけ）</div>
+    <div class="volume-toggle">
+      <span>おと</span>
+      <button class="toggle-switch on" id="toggle-volume" aria-label="音量切り替え"></button>
+      <span id="volume-label">オン</span>
+    </div>
+    <button class="btn-modal danger" id="btn-reset-confirm">しんちょくをリセット</button>
+    <button class="btn-modal cancel" id="btn-parent-close" style="width:100%">とじる</button>
+    <div class="modal-credit">音声: VOICEVOX / ずんだもん（あまあま）<br>© SSS合同会社</div>
+  </div>
+</div>
+
+<!-- RESET CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-reset">
+  <div class="modal-box">
+    <div class="modal-title">リセットしますか？</div>
+    <div class="modal-body">ゲームのしんちょくが すべてきえます。</div>
+    <div class="modal-row">
+      <button class="btn-modal danger" id="btn-reset-do">リセット</button>
+      <button class="btn-modal cancel" id="btn-reset-cancel">もどる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+// ===== CONSTANTS =====
+const ALL_CHARS = [
+  'あ','い','う','え','お',
+  'か','き','く','け','こ',
+  'さ','し','す','せ','そ',
+  'た','ち','つ','て','と',
+  'な','に','ぬ','ね','の',
+  'は','ひ','ふ','へ','ほ',
+  'ま','み','む','め','も',
+  'や','ゆ','よ',
+  'ら','り','る','れ','ろ',
+  'わ','を','ん',
+];
+
+// Index 0 is mix mode (all chars); indices 1-10 are the 10 kana rows
+const COURSES = [
+  { name: 'ぜんぶミックス', emoji: '🎲', chars: ALL_CHARS },
+  { name: 'あ行', emoji: '🌸', chars: ['あ','い','う','え','お'] },
+  { name: 'か行', emoji: '⭐', chars: ['か','き','く','け','こ'] },
+  { name: 'さ行', emoji: '🌈', chars: ['さ','し','す','せ','そ'] },
+  { name: 'た行', emoji: '🎵', chars: ['た','ち','つ','て','と'] },
+  { name: 'な行', emoji: '🌙', chars: ['な','に','ぬ','ね','の'] },
+  { name: 'は行', emoji: '🌺', chars: ['は','ひ','ふ','へ','ほ'] },
+  { name: 'ま行', emoji: '🍀', chars: ['ま','み','む','め','も'] },
+  { name: 'や行', emoji: '⛄', chars: ['や','ゆ','よ'] },
+  { name: 'ら行', emoji: '🎪', chars: ['ら','り','る','れ','ろ'] },
+  { name: 'わ行', emoji: '🎯', chars: ['わ','を','ん'] },
+];
+
+// Pairs/groups that must not appear together when tileCount ≤ 6
+const SIMILAR_GROUPS = [
+  ['あ','お'],
+  ['ぬ','め'],
+  ['わ','ね','れ'],
+  ['る','ろ'],
+  ['さ','ち'],
+  ['き','さ'],
+  ['は','ほ'],
+  ['し','つ'],
+  ['そ','ろ'],
+];
+
+const QUESTIONS_PER_SET = 10;
+const HINT_THRESHOLD = 3;
+const NEXT_DELAY = 2000;
+const STORAGE_KEY = 'hiragana-hunt-v1';
+
+const TILE_BORDER_COLORS = ['#FF6B6B','#FF9F43','#FECA57','#48DBFB','#FF9FF3','#54A0FF','#5F27CD','#00D2D3','#1DD1A1','#C56BFF','#FF9F43','#FF6B6B'];
+
+function getTileConfig(questionIndex) {
+  if (questionIndex < 3) return { count: 4, cols: 2 };
+  if (questionIndex < 6) return { count: 6, cols: 3 };
+  if (questionIndex < 9) return { count: 9, cols: 3 };
+  return { count: 12, cols: 4 };
+}
+
+// Hiragana → WAV filename stem (used by AudioPlayer)
+const CHAR_FILE = {
+  'あ':'a',  'い':'i',  'う':'u',  'え':'e',  'お':'o',
+  'か':'ka', 'き':'ki', 'く':'ku', 'け':'ke', 'こ':'ko',
+  'さ':'sa', 'し':'si', 'す':'su', 'せ':'se', 'そ':'so',
+  'た':'ta', 'ち':'ti', 'つ':'tu', 'て':'te', 'と':'to',
+  'な':'na', 'に':'ni', 'ぬ':'nu', 'ね':'ne', 'の':'no',
+  'は':'ha', 'ひ':'hi', 'ふ':'fu', 'へ':'he', 'ほ':'ho',
+  'ま':'ma', 'み':'mi', 'む':'mu', 'め':'me', 'も':'mo',
+  'や':'ya', 'ゆ':'yu', 'よ':'yo',
+  'ら':'ra', 'り':'ri', 'る':'ru', 'れ':'re', 'ろ':'ro',
+  'わ':'wa', 'を':'wo', 'ん':'n',
+};
+
+// ===== AUDIO ENGINE =====
+const AudioEngine = (() => {
+  let ctx = null;
+  let masterGain = null;
+  let enabled = true;
+
+  function getCtx() {
+    if (!ctx) {
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = ctx.createGain();
+        masterGain.gain.value = 0.5;
+        masterGain.connect(ctx.destination);
+      } catch (e) { return null; }
+    }
+    return ctx;
+  }
+
+  function resume() {
+    const c = getCtx();
+    if (c && c.state === 'suspended') c.resume().catch(() => {});
+  }
+
+  function setEnabled(val) {
+    enabled = val;
+    if (masterGain) masterGain.gain.value = val ? 0.5 : 0;
+  }
+
+  function isEnabled() { return enabled; }
+
+  function playTone(freq, type, startTime, duration, gainVal = 0.6) {
+    const c = getCtx();
+    if (!c || !enabled) return;
+    try {
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.connect(g);
+      g.connect(masterGain);
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, startTime);
+      g.gain.setValueAtTime(gainVal, startTime);
+      g.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+      osc.start(startTime);
+      osc.stop(startTime + duration);
+    } catch (e) {}
+  }
+
+  function playCorrect() {
+    const c = getCtx();
+    if (!c || !enabled) return;
+    const now = c.currentTime;
+    playTone(659.25, 'sine', now, 0.25, 0.7);
+    playTone(1046.5, 'sine', now + 0.18, 0.35, 0.7);
+  }
+
+  function playWrong() {
+    const c = getCtx();
+    if (!c || !enabled) return;
+    const now = c.currentTime;
+    playTone(220, 'sine', now, 0.3, 0.35);
+  }
+
+  function playClear() {
+    const c = getCtx();
+    if (!c || !enabled) return;
+    const now = c.currentTime;
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) =>
+      playTone(f, 'sine', now + i * 0.12, 0.3, 0.6)
+    );
+  }
+
+  function playClick() {
+    const c = getCtx();
+    if (!c || !enabled) return;
+    const now = c.currentTime;
+    playTone(880, 'sine', now, 0.06, 0.2);
+  }
+
+  return { resume, setEnabled, isEnabled, playCorrect, playWrong, playClear, playClick };
+})();
+
+// ===== AUDIO PLAYER (VOICEVOX file-based) =====
+const AudioPlayer = (() => {
+  const SILENT = 'data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQIAAAAAAA==';
+  // filename → HTMLAudioElement (populated by preload())
+  const pool = new Map();
+
+  // Files to preload: all 46 question WAVs + 4 effect WAVs
+  function _allFiles() {
+    const files = Object.values(CHAR_FILE).map(r => `q_${r}.wav`);
+    files.push('ok.wav', 'clear.wav', 'retry.wav', 'cheer.wav');
+    return files;
+  }
+
+  function preload() {
+    _allFiles().forEach(file => {
+      if (pool.has(file)) return;
+      const a = new Audio();
+      a.preload = 'auto';
+      a.src = `audio/${file}`;
+      pool.set(file, a);
+    });
+  }
+
+  function unlock() {
+    // iOS unlock: play silent audio in user gesture
+    const u = new Audio(SILENT);
+    u.play().catch(() => {});
+    // Trigger load on preloaded elements (helps iOS start buffering)
+    pool.forEach(a => { if (a.readyState === 0) a.load(); });
+  }
+
+  // Try to play audio/FILE. Calls fallback() only on real errors (not AbortError).
+  function play(file, fallback) {
+    try { if ('speechSynthesis' in window) speechSynthesis.cancel(); } catch(e) {}
+
+    const a = pool.get(file);
+    if (!a) {
+      console.warn(`AudioPlayer: ${file} not in pool → TTS fallback`);
+      fallback && fallback();
+      return;
+    }
+
+    // Pause other playing pool elements to avoid overlap
+    pool.forEach((el, f) => { if (f !== file && !el.paused) { el.pause(); el.currentTime = 0; } });
+
+    a.currentTime = 0;
+    const p = a.play();
+    if (p) {
+      p.catch(err => {
+        if (err && err.name === 'AbortError') return; // interrupted by next play(), not an error
+        console.warn(`AudioPlayer: ${file} failed (${err.name}) → TTS fallback`);
+        fallback && fallback();
+      });
+    }
+  }
+
+  return { preload, unlock, play };
+})();
+
+// ===== SPEECH =====
+const Speech = (() => {
+  const supported = 'speechSynthesis' in window;
+  let selectedVoice = null;
+
+  function selectVoice() {
+    if (!supported) return;
+    try {
+      const voices = speechSynthesis.getVoices();
+      const ja = voices.filter(v => v.lang && v.lang.startsWith('ja'));
+      if (!ja.length) return;
+      selectedVoice =
+        ja.find(v => /Nanami|Natural/i.test(v.name)) ||
+        ja.find(v => v.name.includes('Google 日本語')) ||
+        ja.find(v => v.name.includes('Kyoko')) ||
+        ja[0];
+    } catch (e) {}
+  }
+
+  function init() {
+    if (!supported) return;
+    try {
+      speechSynthesis.addEventListener('voiceschanged', selectVoice);
+      selectVoice();
+      // iOS unlock: silent utterance
+      const u = new SpeechSynthesisUtterance('');
+      u.lang = 'ja-JP';
+      u.volume = 0;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  function _tts(text) {
+    if (!supported) return;
+    try {
+      speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ja-JP';
+      u.rate = 1.0;
+      u.pitch = 1.1;
+      if (selectedVoice) u.voice = selectedVoice;
+      speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  // file: optional WAV filename in audio/ (e.g. 'q_a.wav').
+  // Tries AudioPlayer first; falls back to speechSynthesis if unavailable.
+  function speak(text, file) {
+    if (file && AudioEngine.isEnabled()) {
+      AudioPlayer.play(file, () => _tts(text));
+      return;
+    }
+    _tts(text);
+  }
+
+  function cancel() {
+    if (!supported) return;
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+
+  return { init, speak, cancel };
+})();
+
+// ===== GAME STATE =====
+const GameState = (() => {
+  const defaults = () => ({
+    currentCourse: 0,        // 0=mix, 1-10=rows
+    clearCounts: {},         // { courseIndex: timesCleared }
+    totalCorrect: 0,
+  });
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        // Migration: any old format (had unlockedLevel/unlockedCourse) → reset, keep totalCorrect
+        if (!data.clearCounts) {
+          return { currentCourse: 0, clearCounts: {}, totalCorrect: data.totalCorrect || 0 };
+        }
+        return Object.assign(defaults(), data);
+      }
+    } catch (e) {}
+    return defaults();
+  }
+
+  function save(state) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        currentCourse: state.currentCourse,
+        clearCounts: state.clearCounts,
+        totalCorrect: state.totalCorrect,
+      }));
+    } catch (e) {}
+  }
+
+  function reset() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    return defaults();
+  }
+
+  return { load, save, reset };
+})();
+
+// ===== QUESTION GENERATOR =====
+const QuestionGenerator = (() => {
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function hasSimilarConflict(chars) {
+    for (const group of SIMILAR_GROUPS) {
+      if (group.filter(c => chars.includes(c)).length >= 2) return true;
+    }
+    return false;
+  }
+
+  function generate(courseIndex, questionIndex, prevTarget) {
+    const courseChars = COURSES[courseIndex].chars;
+
+    // Pick target from course chars, avoiding repeat of previous
+    const targetPool = prevTarget
+      ? courseChars.filter(c => c !== prevTarget)
+      : courseChars;
+    const target = pick(targetPool.length ? targetPool : courseChars);
+
+    const { count, cols } = getTileConfig(questionIndex);
+
+    // Distractor pool: all kana chars except target (ensures variety across all modes)
+    const pool = ALL_CHARS.filter(c => c !== target);
+
+    const applyRule = count <= 6;
+    const distractors = [];
+
+    for (let i = 0; i < count - 1; i++) {
+      let c;
+      let attempts = 0;
+      do {
+        c = pick(pool);
+        attempts++;
+        // After 30 tries, give up on constraint to avoid near-infinite loops
+        if (applyRule && attempts < 30) {
+          if (hasSimilarConflict([target, ...distractors, c])) continue;
+        }
+        break;
+      } while (true);
+      distractors.push(c);
+    }
+
+    return { target, tiles: shuffle([target, ...distractors]), count, cols };
+  }
+
+  return { generate };
+})();
+
+// ===== UI =====
+const UI = (() => {
+  let state = null;
+  let session = {};
+
+  const screens = {
+    splash: document.getElementById('screen-splash'),
+    start: document.getElementById('screen-start'),
+    level: document.getElementById('screen-level'),
+    game: document.getElementById('screen-game'),
+    clear: document.getElementById('screen-clear'),
+  };
+
+  function showScreen(name) {
+    Object.values(screens).forEach(s => s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  // ---- PROGRESS ----
+  function renderProgress(current, total) {
+    document.getElementById('progress-label').textContent = `${current} / ${total}`;
+    const dots = document.getElementById('progress-dots');
+    dots.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+      const d = document.createElement('div');
+      d.className = 'progress-dot' + (i < current ? ' filled' : '');
+      dots.appendChild(d);
+    }
+  }
+
+  // ---- COURSE SELECT ----
+  function renderCourseSelect() {
+    const grid = document.getElementById('level-grid');
+    grid.innerHTML = '';
+    COURSES.forEach((course, i) => {
+      const card = document.createElement('button');
+      const cleared = (state.clearCounts[i] || 0) > 0;
+      const charPreview = course.chars.length > 8 ? 'あ〜ん' : course.chars.join('');
+      card.className = 'level-card unlocked';
+      card.innerHTML = `
+        <span class="level-num">${course.emoji}</span>
+        <span class="level-label">${course.name}${cleared ? ' ⭐' : ''}</span>
+        <span class="course-chars">${charPreview}</span>`;
+      card.addEventListener('click', () => {
+        AudioEngine.playClick();
+        state.currentCourse = i;
+        GameState.save(state);
+        startGame();
+      });
+      grid.appendChild(card);
+    });
+    showScreen('level');
+  }
+
+  // ---- GAME ----
+  function startGame() {
+    session = {
+      questionIndex: 0,
+      correctCount: 0,
+      wrongCount: 0,
+      prevTarget: null,
+      locked: false,
+      target: null,
+    };
+    showScreen('game');
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    session.locked = false;
+    session.wrongCount = 0;
+
+    const { target, tiles, count, cols } = QuestionGenerator.generate(
+      state.currentCourse,
+      session.questionIndex,
+      session.prevTarget
+    );
+    session.target = target;
+    session.prevTarget = target;
+
+    document.getElementById('question-char').textContent = target;
+    renderTiles(tiles, cols);
+    renderProgress(session.questionIndex, QUESTIONS_PER_SET);
+
+    Speech.speak(`${target}、どこにあるかな`, `q_${CHAR_FILE[target]}.wav`);
+  }
+
+  function renderTiles(tiles, cols) {
+    const grid = document.getElementById('tile-grid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+    tiles.forEach((char, i) => {
+      const tile = document.createElement('button');
+      tile.className = 'tile';
+      tile.textContent = char;
+      tile.style.borderColor = TILE_BORDER_COLORS[i % TILE_BORDER_COLORS.length];
+      tile.style.borderWidth = '4px';
+      tile.dataset.char = char;
+      tile.addEventListener('click', () => onTileTap(tile, char));
+      grid.appendChild(tile);
+    });
+  }
+
+  function onTileTap(tile, char) {
+    if (session.locked) return;
+    if (char === session.target) onCorrect(tile);
+    else onWrong(tile);
+  }
+
+  function onCorrect(tile) {
+    session.locked = true;
+    disableAllTiles();
+    tile.classList.add('correct');
+    AudioEngine.playCorrect();
+    spawnStars(tile);
+    jumpCharacter();
+    Speech.speak('できたね！', 'ok.wav');
+
+    session.questionIndex++;
+    session.correctCount++;
+    state.totalCorrect++;
+    renderProgress(session.questionIndex, QUESTIONS_PER_SET);
+
+    if (session.questionIndex >= QUESTIONS_PER_SET) {
+      if (!state.clearCounts) state.clearCounts = {};
+      state.clearCounts[state.currentCourse] = (state.clearCounts[state.currentCourse] || 0) + 1;
+      GameState.save(state);
+      setTimeout(showClear, NEXT_DELAY);
+    } else {
+      setTimeout(nextQuestion, NEXT_DELAY);
+    }
+  }
+
+  function onWrong(tile) {
+    tile.classList.add('wrong');
+    AudioEngine.playWrong();
+    setTimeout(() => tile.classList.remove('wrong'), 450);
+    session.wrongCount++;
+    if (session.wrongCount >= HINT_THRESHOLD) showHint();
+  }
+
+  function showHint() {
+    document.getElementById('tile-grid').querySelectorAll('.tile').forEach(t => {
+      if (t.dataset.char === session.target) t.classList.add('hint-pulse');
+    });
+    Speech.speak(`${session.target}、どこにあるかな`, `q_${CHAR_FILE[session.target]}.wav`);
+  }
+
+  function disableAllTiles() {
+    document.getElementById('tile-grid').querySelectorAll('.tile')
+      .forEach(t => t.classList.add('disabled'));
+  }
+
+  function jumpCharacter() {
+    const c = document.getElementById('char-game');
+    c.classList.remove('jump');
+    void c.offsetWidth;
+    c.classList.add('jump');
+    setTimeout(() => c.classList.remove('jump'), 600);
+  }
+
+  function spawnStars(tile) {
+    const rect = tile.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const stars = ['⭐','✨','🌟'];
+    for (let i = 0; i < 5; i++) {
+      const el = document.createElement('div');
+      el.className = 'star-burst';
+      el.textContent = stars[i % stars.length];
+      const angle = (i / 5) * Math.PI * 2;
+      const dist = 60 + Math.random() * 50;
+      el.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
+      el.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
+      el.style.left = cx + 'px';
+      el.style.top = cy + 'px';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 850);
+    }
+  }
+
+  // ---- CLEAR ----
+  function showClear() {
+    AudioEngine.playClear();
+    Speech.speak('すごい！ぜんぶできたね！', 'clear.wav');
+    spawnConfetti();
+
+    const course = COURSES[state.currentCourse];
+    const isMix = state.currentCourse === 0;
+    const isLast = state.currentCourse >= COURSES.length - 1;
+    document.getElementById('clear-subtitle').textContent = `${course.name} クリア！`;
+
+    const btnNext = document.getElementById('btn-next');
+    btnNext.textContent = (isMix || isLast)
+      ? 'もういちど'
+      : `${COURSES[state.currentCourse + 1].name} へ →`;
+
+    showScreen('clear');
+  }
+
+  function spawnConfetti() {
+    const container = document.getElementById('confetti-container');
+    container.innerHTML = '';
+    const colors = ['#FF6B6B','#FECA57','#48DBFB','#FF9FF3','#54A0FF','#1DD1A1','#FF9F43'];
+    for (let i = 0; i < 60; i++) {
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + 'vw';
+      piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (8 + Math.random() * 8) + 'px';
+      piece.style.height = (8 + Math.random() * 8) + 'px';
+      piece.style.animationDuration = (2 + Math.random() * 2) + 's';
+      piece.style.animationDelay = (Math.random() * 1) + 's';
+      piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      container.appendChild(piece);
+    }
+    setTimeout(() => { container.innerHTML = ''; }, 4000);
+  }
+
+  // ---- PARENT MENU ----
+  function openParentMenu() {
+    updateVolumeUI();
+    document.getElementById('modal-parent').classList.add('active');
+  }
+
+  function updateVolumeUI() {
+    const on = AudioEngine.isEnabled();
+    document.getElementById('toggle-volume').classList.toggle('on', on);
+    document.getElementById('volume-label').textContent = on ? 'オン' : 'オフ';
+  }
+
+  // ---- INIT ----
+  function init() {
+    state = GameState.load();
+
+    document.getElementById('btn-start').addEventListener('click', () => {
+      AudioEngine.resume();
+      AudioPlayer.unlock();
+      Speech.init();
+      AudioEngine.playClick();
+      state.currentCourse = state.currentCourse || 0;
+      GameState.save(state);
+      startGame();
+    });
+
+    document.getElementById('btn-level-select').addEventListener('click', () => {
+      AudioEngine.resume();
+      AudioPlayer.unlock();
+      Speech.init();
+      state = GameState.load();
+      renderCourseSelect();
+    });
+
+    document.getElementById('btn-back-start').addEventListener('click', () => {
+      showScreen('start');
+    });
+
+    document.getElementById('btn-home-level').addEventListener('click', () => {
+      AudioEngine.playClick();
+      showScreen('start');
+    });
+
+    document.getElementById('btn-home-game').addEventListener('click', () => {
+      AudioEngine.playClick();
+      Speech.cancel();
+      showScreen('start');
+    });
+
+    document.getElementById('btn-speak').addEventListener('click', () => {
+      AudioEngine.playClick();
+      Speech.speak(`${session.target}、どこにあるかな`, `q_${CHAR_FILE[session.target]}.wav`);
+    });
+
+    document.getElementById('btn-next').addEventListener('click', () => {
+      AudioEngine.playClick();
+      const isMix = state.currentCourse === 0;
+      const isLast = state.currentCourse >= COURSES.length - 1;
+      if (!isMix && !isLast) state.currentCourse++;
+      GameState.save(state);
+      startGame();
+    });
+
+    document.getElementById('btn-quit').addEventListener('click', () => {
+      AudioEngine.playClick();
+      Speech.cancel();
+      showScreen('start');
+    });
+
+    // Gear - 3 second long press (Pointer Events)
+    let gearTimer = null;
+    const gearBtn = document.getElementById('btn-gear');
+    function startGearHold(e) {
+      gearBtn.setPointerCapture(e.pointerId);
+      gearBtn.classList.add('holding');
+      gearTimer = setTimeout(() => {
+        gearBtn.classList.remove('holding');
+        openParentMenu();
+      }, 3000);
+    }
+    function cancelGearHold() {
+      if (gearTimer) { clearTimeout(gearTimer); gearTimer = null; }
+      gearBtn.classList.remove('holding');
+    }
+    gearBtn.addEventListener('pointerdown', startGearHold);
+    gearBtn.addEventListener('pointerup', cancelGearHold);
+    gearBtn.addEventListener('pointercancel', cancelGearHold);
+    gearBtn.addEventListener('pointerleave', cancelGearHold);
+    gearBtn.addEventListener('contextmenu', e => e.preventDefault());
+
+    document.getElementById('btn-parent-close').addEventListener('click', () => {
+      document.getElementById('modal-parent').classList.remove('active');
+    });
+
+    document.getElementById('toggle-volume').addEventListener('click', () => {
+      const newVal = !AudioEngine.isEnabled();
+      AudioEngine.setEnabled(newVal);
+      if (newVal) AudioEngine.resume();
+      updateVolumeUI();
+    });
+
+    document.getElementById('btn-reset-confirm').addEventListener('click', () => {
+      document.getElementById('modal-parent').classList.remove('active');
+      document.getElementById('modal-reset').classList.add('active');
+    });
+
+    document.getElementById('btn-reset-do').addEventListener('click', () => {
+      state = GameState.reset();
+      document.getElementById('modal-reset').classList.remove('active');
+      Speech.cancel();
+      showScreen('start');
+    });
+
+    document.getElementById('btn-reset-cancel').addEventListener('click', () => {
+      document.getElementById('modal-reset').classList.remove('active');
+      document.getElementById('modal-parent').classList.add('active');
+    });
+
+    // Splash → start transition
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      showScreen('start');
+    } else {
+      let splashDone = false;
+      function endSplash() {
+        if (splashDone) return;
+        splashDone = true;
+        screens.splash.removeEventListener('pointerdown', endSplash);
+        showScreen('start');
+      }
+      screens.splash.addEventListener('pointerdown', endSplash);
+      setTimeout(endSplash, 1500);
+    }
+  }
+
+  return { init };
+})();
+
+// Boot
+UI.init();
+AudioPlayer.preload(); // 全音声ファイルをバックグラウンドで先読み
+</script>
+</body>
+</html>
